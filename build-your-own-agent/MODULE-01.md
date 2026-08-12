@@ -802,9 +802,16 @@ better than most people using them.
   the original part on `ToolCall.raw` instead of rebuilding one, and without it the second
   turn fails with a 400. Second, **Gemini reports `FinishReason.STOP` when asking for a
   tool**, which is why 1.5 now teaches checking `reply.tool_calls` rather than the stop word.
-- **Still unverified:** live calls to Anthropic and OpenAI. Translation shapes are confirmed
-  correct and the Anthropic block shapes were unit-checked; the round trip is not done. Needs
-  one key each and about five minutes.
+- **OpenAI is round-trip verified on both model generations** (2026-08-12, `gpt-4o-mini` and
+  `gpt-5`). That pair matters: newer OpenAI models **reject `max_tokens`** and require
+  `max_completion_tokens`, so an adapter that only sends the old name fails with a 400 for any
+  learner who picks a current model. `llm.py` now starts with `max_tokens` and switches
+  permanently on the first refusal, which covers the whole range without asking the learner to
+  know which camp their model is in. Re-test both ends of the range whenever the OpenAI SDK
+  is bumped.
+- **Still unverified:** live calls to Anthropic. Block shapes were unit-checked against
+  `anthropic` 0.121.0 and the translation is confirmed correct; the round trip is not done.
+  Needs one key and about two minutes.
 - **Model names rot fast.** `gemini-2.5-flash` is still *listed* by the API but returns 404
   "no longer available to new users" — so a course pinned to it breaks for exactly the new
   learners it is aimed at. Use the floating aliases (`gemini-flash-latest`) in lesson text,

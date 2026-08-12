@@ -115,6 +115,10 @@ class OpenAIProvider:
             api_key=api_key or os.environ.get("OPENAI_API_KEY") or "not-needed",
         )
         self.model = model
+        # Older models take max_tokens; newer ones reject it and want
+        # max_completion_tokens. We do not know which this is until we ask, so
+        # start with the old name and switch permanently on the first refusal.
+        self._token_param = "max_tokens"
 
     def _tools(self, tools):
         return [{"type": "function",
@@ -145,11 +149,19 @@ class OpenAIProvider:
         return out
 
     def send(self, messages, tools=None, system=None, max_tokens=8000):
-        kw = {"model": self.model, "messages": self._messages(messages, system),
-              "max_tokens": max_tokens}
+        kw = {"model": self.model, "messages": self._messages(messages, system)}
         if tools:
             kw["tools"] = self._tools(tools)
-        r = self.client.chat.completions.create(**kw)
+
+        try:
+            r = self.client.chat.completions.create(
+                **kw, **{self._token_param: max_tokens})
+        except Exception as e:
+            if "max_completion_tokens" not in str(e):
+                raise
+            self._token_param = "max_completion_tokens"
+            r = self.client.chat.completions.create(
+                **kw, **{self._token_param: max_tokens})
         choice = r.choices[0]
         calls = []
         for tc in (choice.message.tool_calls or []):
