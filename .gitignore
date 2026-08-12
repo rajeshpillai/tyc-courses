@@ -1,0 +1,15 @@
+# Build output — regenerate with build_payload.py / make_*_js.py.
+# The MODULE-*.md files are the source of truth; these are derived and large.
+payload.json
+publish.js
+sync.js
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Tooling scratch
+.playwright-mcp/
+.env
