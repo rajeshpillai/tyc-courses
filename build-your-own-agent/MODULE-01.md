@@ -95,6 +95,9 @@ Pick a model to work with. Any of these is fine, and you can change your mind la
 | **OpenAI** | Paid | An API key, a few dollars covers the course |
 | **Anthropic** | Paid | An API key, a few dollars covers the course |
 
+The first three are the best tested. If you are choosing on cost, the local option and
+Gemini's free tier both cover the entire course without a card.
+
 Then install what you need:
 
 ```bash
@@ -809,9 +812,18 @@ better than most people using them.
   permanently on the first refusal, which covers the whole range without asking the learner to
   know which camp their model is in. Re-test both ends of the range whenever the OpenAI SDK
   is bumped.
-- **Still unverified:** live calls to Anthropic. Block shapes were unit-checked against
-  `anthropic` 0.121.0 and the translation is confirmed correct; the round trip is not done.
-  Needs one key and about two minutes.
+- **Anthropic is verified as far as is possible without a key** (2026-08-12, `anthropic`
+  0.121.0). Both halves were checked against the SDK's own models rather than by reading:
+  every request payload the adapter builds validates against `MessageParam` and `ToolParam`
+  (all three message kinds, and the `text` / `tool_use` / `tool_result` blocks), and the
+  response parsing was run over a `Message` constructed from the SDK's response models —
+  text extraction, call id and name, arguments as a dict, `wants_tool`, the stop word and the
+  usage mapping all correct, and the loop correctly exits on `end_turn`.
+- **What that still does not prove:** that the API accepts the request and that a real model
+  behaves as expected. Structure is confirmed; the network round trip is not. **If anyone
+  obtains an Anthropic key, run `verify_providers.py` before this path is recommended to
+  learners** — the other three providers each had a live-only bug that no amount of shape
+  checking would have caught. Assume this one does too until proven otherwise.
 - **Model names rot fast.** `gemini-2.5-flash` is still *listed* by the API but returns 404
   "no longer available to new users" — so a course pinned to it breaks for exactly the new
   learners it is aimed at. Use the floating aliases (`gemini-flash-latest`) in lesson text,
